@@ -1,54 +1,44 @@
+import { generateToneResponse } from "@/lib/generateToneResponse";
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { z } from "zod";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const schema = z.object({
+  original: z.string().min(5).max(1000),
+  tone: z.enum([
+    "professional",
+    "friendly",
+    "casual",
+    "assertive",
+    "apologetic",
+  ]),
 });
 
 export async function POST(req: Request) {
   try {
-    const { original, tone } = await req.json();
-
-    if (
-      typeof original !== "string" ||
-      original.trim().length === 0 ||
-      typeof tone !== "string" ||
-      tone.trim().length === 0
-    ) {
-      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    const parsed = schema.safeParse(await req.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.format() },
+        { status: 400 }
+      );
     }
+    const { original, tone } = parsed.data;
 
     // For local dev -- save tokens ;)
     if (process.env.MOCK_MODE === "true") {
       return NextResponse.json({
-        rewritten: `FAKE: Rewritten in ${tone} tone — "${original}"`,
+        rewritten: prompt,
       });
     }
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a writing assistant that rewrites text in different tones.",
-        },
-        {
-          role: "user",
-          content: `Rewrite this in a ${tone} tone: "${original}"`,
-        },
-      ],
-      temperature: 0.7,
-    });
-
-    const rewritten = completion.choices[0]?.message?.content ?? "No output.";
+    const rewritten = await generateToneResponse(original, tone);
 
     return NextResponse.json({ rewritten });
   } catch (error) {
     console.error("🔥 API route error:", error);
 
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: "Failed to generate tone response." },
       { status: 500 }
     );
   }
