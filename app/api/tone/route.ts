@@ -9,16 +9,29 @@ export async function POST(req: Request) {
   try {
     const { original, tone } = await req.json();
 
-    if (!original || !tone) {
-      return NextResponse.json({ error: "Missing input" }, { status: 400 });
+    if (
+      typeof original !== "string" ||
+      original.trim().length === 0 ||
+      typeof tone !== "string" ||
+      tone.trim().length === 0
+    ) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
+    // For local dev -- save tokens ;)
+    if (process.env.MOCK_MODE === "true") {
+      return NextResponse.json({
+        rewritten: `FAKE: Rewritten in ${tone} tone — "${original}"`,
+      });
     }
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o", // Use gpt-4 only if your key has access
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
-          content: "You are a writing assistant that rewrites text in different tones.",
+          content:
+            "You are a writing assistant that rewrites text in different tones.",
         },
         {
           role: "user",
@@ -29,9 +42,14 @@ export async function POST(req: Request) {
     });
 
     const rewritten = completion.choices[0]?.message?.content ?? "No output.";
+
     return NextResponse.json({ rewritten });
   } catch (error) {
     console.error("🔥 API route error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
