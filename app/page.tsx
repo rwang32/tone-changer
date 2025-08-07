@@ -67,7 +67,7 @@ export default function HomePage() {
       {loading && <p className="mt-4 text-gray-600">Rewriting message...</p>}
 
       {rewritten && (
-        <div className="mt-6 bg-gray-100 p-4 rounded border border-gray-300 whitespace-pre-wrap">
+        <div className="mt-6 bg-gray-600 p-4 rounded border border-gray-300 whitespace-pre-wrap">
           <h2 className="font-semibold mb-2">Rewritten Message:</h2>
           <p>{rewritten}</p>
         </div>
