@@ -19,7 +19,14 @@ export default function HomePage() {
       body: JSON.stringify({ original, tone }),
     });
 
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("❌ API error:", errorText);
+      return;
+    }
+
     const data = await res.json();
+    console.log("✅ Rewritten:", data.rewritten);
     setRewritten(data.rewritten);
     setLoading(false);
   };
