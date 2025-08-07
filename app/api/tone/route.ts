@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     // For local dev -- save tokens ;)
     if (process.env.MOCK_MODE === "true") {
       return NextResponse.json({
-        rewritten: prompt,
+        rewritten: `THIS IS A MOCK RESPONSE -- "${original}" written in ${tone}`,
       });
     }
 
